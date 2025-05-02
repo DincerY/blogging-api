@@ -33,10 +33,6 @@ func (r *BlogRepository) Create(blog models.Blog) (int, error) {
 }
 
 func (r *BlogRepository) Update(blog models.Blog, id int) error {
-	_, err := r.GetById(id)
-	if err != nil {
-		return err
-	}
 	tags := strings.Join(blog.Tags, ",")
 	updateBlogSql := `UPDATE blog SET title = $1,content = $2,category = $3,tags = $4,updated_at=$5 WHERE id = $6`
 	res, err := r.DB.Exec(updateBlogSql, blog.Title, blog.Content, blog.Category, tags, time.Now(), id)

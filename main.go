@@ -34,10 +34,15 @@ func updateBlog(c *gin.Context) {
 	paramId := c.Param("id")
 	id, err := strconv.Atoi(paramId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "id was not valid")
+		c.JSON(http.StatusBadRequest, "id was not valid")
 		return
 	}
 	blogRepo := repositories.NewBlogRepository(db.DB)
+	_, err = blogRepo.GetById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, err.Error())
+		return
+	}
 	var b models.Blog
 	err = c.ShouldBindJSON(&b)
 	if err != nil {
@@ -59,11 +64,15 @@ func deleteBlog(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "invalid id")
 		return
 	}
-
 	blogRepo := repositories.NewBlogRepository(db.DB)
-	err = blogRepo.Delete(id)
+	_, err = blogRepo.GetById(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, err.Error())
+		return
+	}
+	err = blogRepo.Delete(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
@@ -89,14 +98,14 @@ func getById(c *gin.Context) {
 	paramId := c.Param("id")
 	id, err := strconv.Atoi(paramId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "id is invalid")
+		c.JSON(http.StatusBadRequest, "id is invalid")
 		return
 	}
 	blogRepo := repositories.NewBlogRepository(db.DB)
 	blogs, err := blogRepo.GetById(id)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusNotFound, err.Error())
 		return
 	}
 
